@@ -3,6 +3,8 @@ using System.Text.RegularExpressions;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
+using Nest;
+using SendGrid.Helpers.Mail;
 
 namespace QueueTrigger
 {
@@ -21,10 +23,20 @@ namespace QueueTrigger
 			return "";
 		}
 		[FunctionName("Function1")]
-        public void Run([QueueTrigger("transactions", Connection = "StorageAccountConn")]string transactionDetails, ILogger log)
+        public void Run(
+			[QueueTrigger("transactions", Connection = "StorageAccountConn")]string transactionDetails,
+			[SendGrid(ApiKey="SendGridApiKey")] out SendGridMessage message,
+			ILogger log)
         {
 			string email = getBetween(transactionDetails, "Email : ", "\n");
-            log.LogInformation($"C# Queue trigger function processed: {email} + {transactionDetails}");
+			
+			message = new SendGridMessage();
+			message.SetFrom(new EmailAddress(email));
+			message.AddTo(email);
+			message.AddContent("text/html", transactionDetails);
+			message.SetSubject("Your Booking is Confirmed");
+			
+			log.LogInformation($"C# Queue trigger function processed: {email} + {transactionDetails}");
         }
     }
 }
