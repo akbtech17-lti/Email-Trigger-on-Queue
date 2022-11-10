@@ -39,32 +39,69 @@ namespace QueueTrigger
 			[QueueTrigger("transactions", Connection = "StorageAccountConn")]string transactionDetails,
 			ILogger log)
         {
-			string name = GetBetween(transactionDetails, "Name : ", "\n");
-			string email = GetBetween(transactionDetails, "Email : ", "\n");
-			string seatNos = GetBetween(transactionDetails, "Seat No : ", "\n");
-			string noOfSeats = GetBetween(transactionDetails, "No of Seats : ", "\n");
-			string movieName = GetBetween(transactionDetails, "Movie Name : ", "\n");
-			string showTime = GetBetween(transactionDetails, "Show Time : ", "");
+			string message = GetBetween(transactionDetails, "Message : ","\n");
+			if (message.Equals(""))
+			{
+				// booking email
+				string name = GetBetween(transactionDetails, "Name : ", "\n");
+				string email = GetBetween(transactionDetails, "Email : ", "\n");
+				string seatNos = GetBetween(transactionDetails, "Seat No : ", "\n");
+				string noOfSeats = GetBetween(transactionDetails, "No of Seats : ", "\n");
+				string movieName = GetBetween(transactionDetails, "Movie Name : ", "\n");
+				string showTime = GetBetween(transactionDetails, "Show Time : ", "");
 
-			string apiKey = Environment.GetEnvironmentVariable("SendGridApiKey");
-			SendGridClient client = new SendGridClient(apiKey);
-			EmailAddress from = new EmailAddress("akb.tech17@gmail.com", "Book My Movie");
-			string subject = "Your booking is Confirmed!";
-			EmailAddress to = new EmailAddress(email);
-			string plainTextContent = transactionDetails;
-			string htmlContent = "" +
-			$"<h1>Thankyou {name}</h1>" +
-			$"<h3>for booking ticket from book my movie</h3>" +
-			$"<hr/>" +
-			$"<br>" +
-			$"<h2>Movie Name : {movieName}</h2>" +
-			$"<h2>Show Time :  {showTime}</h2>" +
-			$"<h3>No of Seats :  {noOfSeats}</h3>" +
-			$"<h3>Seat Numbers :  {seatNos}</h3>";
-			SendGridMessage msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
-			Response response = await client.SendEmailAsync(msg);
+				string apiKey = Environment.GetEnvironmentVariable("SendGridApiKey");
+				SendGridClient client = new SendGridClient(apiKey);
+				EmailAddress from = new EmailAddress("akb.tech17@gmail.com", "Book My Movie");
+				string subject = "Your booking is Confirmed!";
+				EmailAddress to = new EmailAddress(email);
+				string plainTextContent = transactionDetails;
+				string htmlContent = "" +
+				$"<h1>Thankyou {name}</h1>" +
+				$"<h3>for using Book My Movie</h3>" +
+				$"<hr/>" +
+				$"<br>" +
+				$"<h2>Movie name : {movieName}</h2>" +
+				$"<h2>Show time :  {showTime}</h2>" +
+				$"<h3>No of seats :  {noOfSeats}</h3>" +
+				$"<h3>Seat numbers :  {seatNos}</h3>";
+				SendGridMessage msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+				Response response = await client.SendEmailAsync(msg);
 
-			log.LogInformation($"C# Queue trigger function processed: To : {email}\n From: akb.tech17@gmail.com {transactionDetails}");
+				log.LogInformation($"C# Queue trigger function processed: To : {email}\n From: akb.tech17@gmail.com {transactionDetails}");
+			}
+			else {
+				// cancel booking email
+				string name = GetBetween(transactionDetails, "Name : ", "\n");
+				string email = GetBetween(transactionDetails, "Email : ", "\n");
+				string seatNos = GetBetween(transactionDetails, "Seat No : ", "\n");
+				string transactionId = GetBetween(transactionDetails, "Transaction Id : ", "\n");
+				string refundCost = GetBetween(transactionDetails, "Refund Cost : ", "\n");
+				string movieName = GetBetween(transactionDetails, "Movie Name : ", "\n");
+				string showTime = GetBetween(transactionDetails, "Show Time : ", "");
+
+				string apiKey = Environment.GetEnvironmentVariable("SendGridApiKey");
+				SendGridClient client = new SendGridClient(apiKey);
+				EmailAddress from = new EmailAddress("akb.tech17@gmail.com", "Book My Movie");
+				string subject = $"Your #{transactionId} Booking is Cancelled!";
+				EmailAddress to = new EmailAddress(email);
+				string plainTextContent = transactionDetails;
+				string htmlContent = "" +
+				$"<h1>Thankyou {name}</h1>" +
+				$"<h3>for using Book My Movie</h3>" +
+				$"<hr/>" +
+				$"<br>" +
+				$"<h2>Transaction Id : {transactionId}</h2>" +
+				$"<h2>Movie name : {movieName}</h2>" +
+				$"<h2>Show time : {showTime}</h2>" +
+				$"<h3>Seat numbers : {seatNos}</h3>" +
+				$"<h3>Refund cost : {refundCost}</h3>" ;
+				SendGridMessage msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+				Response response = await client.SendEmailAsync(msg);
+
+				log.LogInformation($"C# Queue trigger function processed: To : {email}\n From: akb.tech17@gmail.com {transactionDetails}");
+			}
+			
         }
     }
 }
